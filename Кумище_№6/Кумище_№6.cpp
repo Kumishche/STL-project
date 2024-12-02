@@ -9,11 +9,13 @@
 #include <numeric>
 
 #include "Language.h"
+#include "Func.h"
 
 using namespace std;
 
 
-void CheckInput(int& var);
+template<typename T>
+void CheckInput(T& var);
 void InputOption(int& var);
 
 bool lessInNumOfLetters(Language l1, Language l2);
@@ -34,6 +36,7 @@ int main()
 	string name = "";
 	int num_of_letters = 0;
 	string* countries = nullptr;
+	bool left_to_right = true;
 	int size = 0;
 	int id = 0;
 	int t = 0;
@@ -68,6 +71,16 @@ int main()
 		case 1:
 			cout << "Введите название: ";
 			cin >> name;
+			cout << "Введите направление (0 - справа налево, 1 - слева направо): ";
+			cin >> left_to_right;
+			CheckInput(left_to_right);
+			while (left_to_right < 0 || left_to_right > 1)
+			{
+				cout << "Некорректный ввод" << endl;
+				cout << "Повторите ввод: ";
+				cin >> left_to_right;
+				CheckInput(left_to_right);
+			}
 			cout << "Введите количество букв: ";
 			cin >> num_of_letters;
 			CheckInput(num_of_letters);
@@ -95,23 +108,19 @@ int main()
 			{
 				cin >> countries[i];
 			}
-			languages.push_back(Language(name, num_of_letters, countries, size));
+			languages.push_back(Language(name, left_to_right, num_of_letters, countries, size));
 			cout << "Язык записан" << endl;
 			break;
 
 		case 2:
-			if (languages.size() == 0)
-			{
-				cout << "Нечего удалять..." << endl;
-				break;
-			}
+			if (languages.size() == 0) break;
 			languages.pop_back();
 			cout << "Последний язык удален" << endl;
 			break;
 
 		case 3:
-			cout << "Вывод языков: " << endl;
 			if (languages.size() == 0) break;
+			cout << "Вывод языков: " << endl;
 			for (int i = 0; i < languages.size(); i++)
 			{
 				cout << i + 1 << "  " << setw(5) << setfill('-') << ' ' << endl;
@@ -121,8 +130,8 @@ int main()
 			break;
 
 		case 4:
-			InputOption(t);
 			if (languages.size() == 0) break;
+			InputOption(t);
 			switch (t)
 			{
 			case 1:
@@ -139,8 +148,8 @@ int main()
 			break;
 
 		case 5:
-			InputOption(t);
 			if (languages.size() == 0) break;
+			InputOption(t);
 			switch (t)
 			{
 			case 1:
@@ -157,8 +166,8 @@ int main()
 			break;
 
 		case 6:
-			InputOption(t);
 			if (languages.size() == 0) break;
+			InputOption(t);
 			switch (t)
 			{
 			case 1:
@@ -182,9 +191,96 @@ int main()
 			break;
 
 		case 8:
+			if (languages.size() == 0) break;
+			InputOption(t);
+			switch (t)
+			{
+			case 1:
+				cout << "Введите пороговое значение имени: ";
+				cin >> name;
+				one = *min_element(languages.begin(), languages.end(), lessInName);
+				break;
+			case 2:
+				cout << "Введите пороговое количество букв: ";
+				cin >> num_of_letters;
+				CheckInput(num_of_letters);
+				while (num_of_letters < 1)
+				{
+					cout << "Некорректный ввод" << endl;
+					cout << "Повторите ввод: ";
+					cin >> num_of_letters;
+					CheckInput(num_of_letters);
+				}
+				one = *min_element(languages.begin(), languages.end(), lessInNumOfLetters);
+				break;
+			case 3:
+				cout << "Введите пороговое количество стран: ";
+				cin >> size;
+				CheckInput(size);
+				while (size < 0)
+				{
+					cout << "Некорректный ввод" << endl;
+					cout << "Повторите ввод: ";
+					cin >> size;
+					CheckInput(size);
+				}
+				one = *min_element(languages.begin(), languages.end(), lessInNumOfCountries);
+				break;
+			}
+			cout << one;
 			break;
 
 		case 9:
+			if (languages.size() == 0) break;
+			InputOption(t);
+			one = Language();
+			switch (t)
+			{
+			case 1:
+				cout << "Введите имя: ";
+				cin >> name;
+				if (find_if(languages.begin(), languages.end(), Func{ name }) != languages.end())
+					one = *find_if(languages.begin(), languages.end(), Func{ name });
+				break;
+			case 2:
+				cout << "Введите количество букв: ";
+				cin >> num_of_letters;
+				CheckInput(num_of_letters);
+				while (num_of_letters < 1)
+				{
+					cout << "Некорректный ввод" << endl;
+					cout << "Повторите ввод: ";
+					cin >> num_of_letters;
+					CheckInput(num_of_letters);
+				}
+				if (find_if(languages.begin(), languages.end(),
+					[num_of_letters](Language l)
+					{ return l.get_num_of_letters() == num_of_letters; }) != languages.end())
+					one = *find_if(languages.begin(), languages.end(),
+						[num_of_letters](Language l)
+						{ return l.get_num_of_letters() == num_of_letters; });
+				break;
+			case 3:
+				cout << "Введите количество стран: ";
+				cin >> size;
+				CheckInput(size);
+				while (size < 0)
+				{
+					cout << "Некорректный ввод" << endl;
+					cout << "Повторите ввод: ";
+					cin >> size;
+					CheckInput(size);
+				}
+				if (find_if(languages.begin(), languages.end(),
+					[size](Language l)
+					{ return l.get_num_of_countries() == size; }) != languages.end())
+					one = *find_if(languages.begin(), languages.end(),
+						[size](Language l)
+						{ return l.get_num_of_countries() == size; });
+				break;
+			}
+			if (one.get_name() != "null")
+				cout << one;
 			break;
 
 		case 10:
@@ -205,7 +301,8 @@ int main()
 	}
 }
 
-void CheckInput(int& var)
+template<typename T>
+void CheckInput(T& var)
 {
 	while (cin.fail() || cin.get() != '\n')
 	{
@@ -239,7 +336,6 @@ bool lessInNumOfLetters(Language l1, Language l2)
 bool lessInNumOfCountries(Language l1, Language l2)
 {
 	return l1.get_num_of_countries() < l2.get_num_of_countries();
-
 }
 
 bool lessInName(Language l1, Language l2)

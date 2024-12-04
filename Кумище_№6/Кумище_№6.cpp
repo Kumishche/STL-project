@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <functional>
 
 #include "Language.h"
 #include "Func.h"
@@ -21,7 +22,8 @@ void InputOption(int& var);
 bool lessInNumOfLetters(Language l1, Language l2);
 bool lessInNumOfCountries(Language l1, Language l2);
 bool lessInName(Language l1, Language l2);
-
+bool findMoreThan(Language l1, string name);
+bool findMoreThan(Language l1, int num);
 
 int main()
 {
@@ -187,7 +189,9 @@ int main()
 			if (languages.size() == 0) break;
 			cout << "Агрегированное значение: ";
 			cout << accumulate(languages.begin(), languages.end(), 0,
-				[](int n, Language l2) { return n + l2.get_num_of_letters(); }) << endl;
+				[](int n, Language l2) 
+				{ return n + (l2.get_num_of_letters() * l2.get_num_of_countries()); })
+				<< endl;
 			break;
 
 		case 8:
@@ -198,7 +202,8 @@ int main()
 			case 1:
 				cout << "Введите пороговое значение имени: ";
 				cin >> name;
-				one = *min_element(languages.begin(), languages.end(), lessInName);
+				for_each(languages.begin(), languages.end(), [name](Language l)
+					{findMoreThan(l, name); });
 				break;
 			case 2:
 				cout << "Введите пороговое количество букв: ";
@@ -211,7 +216,8 @@ int main()
 					cin >> num_of_letters;
 					CheckInput(num_of_letters);
 				}
-				one = *min_element(languages.begin(), languages.end(), lessInNumOfLetters);
+				for_each(languages.begin(), languages.end(), [num_of_letters](Language l)
+					{findMoreThan(l, num_of_letters); });
 				break;
 			case 3:
 				cout << "Введите пороговое количество стран: ";
@@ -224,7 +230,8 @@ int main()
 					cin >> size;
 					CheckInput(size);
 				}
-				one = *min_element(languages.begin(), languages.end(), lessInNumOfCountries);
+				for_each(languages.begin(), languages.end(), [size](Language l)
+					{findMoreThan(l, size); });
 				break;
 			}
 			cout << one;
@@ -341,6 +348,18 @@ bool lessInNumOfCountries(Language l1, Language l2)
 bool lessInName(Language l1, Language l2)
 {
 	return l1.get_name() < l2.get_name();
+}
+
+bool findMoreThan(Language l1, string name)
+{
+	if (l1.get_name() > name)
+		cout << l1 << endl;
+}
+
+bool findMoreThan(Language l1, int num)
+{
+	if (l1.get_num_of_letters() > num)
+		cout << l1 << endl;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

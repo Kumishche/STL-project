@@ -8,12 +8,14 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <string>
+#include <fstream>
 
 #include "Language.h"
 #include "Func.h"
+#include "Tests.h"
 
 using namespace std;
-
 
 template<typename T>
 void CheckInput(T& var);
@@ -22,8 +24,8 @@ void InputOption(int& var);
 bool lessInNumOfLetters(Language l1, Language l2);
 bool lessInNumOfCountries(Language l1, Language l2);
 bool lessInName(Language l1, Language l2);
-bool findMoreThan(Language l1, string name);
-bool findMoreThan(Language l1, int num);
+void findMoreThan(Language l1, string name);
+void findMoreThan(Language l1, int num, int t);
 
 int main()
 {
@@ -37,14 +39,14 @@ int main()
 	int c = 0;
 	string name = "";
 	int num_of_letters = 0;
-	string* countries = nullptr;
 	bool left_to_right = true;
-	int size = 0;
-	int id = 0;
+	int num_of_countries = 0;
 	int t = 0;
-	int num = 0;
 	vector<Language> languages;
 	Language one;
+	ofstream out;
+	ifstream in;
+	string line;
 
 	while (true)
 	{
@@ -62,7 +64,8 @@ int main()
 		cout << "10 - запись в файл" << endl;
 		cout << "11 - чтение из файла" << endl;
 		cout << setw(20) << setfill('-') << ' ' << endl;
-		cout << "12 - выйти" << endl;
+		cout << "12 - тестирование" << endl;
+		cout << "13 - выйти" << endl;
 		cout << setw(40) << setfill('=') << ' ' << endl;
 
 		cin >> c;
@@ -76,13 +79,6 @@ int main()
 			cout << "Введите направление (0 - справа налево, 1 - слева направо): ";
 			cin >> left_to_right;
 			CheckInput(left_to_right);
-			while (left_to_right < 0 || left_to_right > 1)
-			{
-				cout << "Некорректный ввод" << endl;
-				cout << "Повторите ввод: ";
-				cin >> left_to_right;
-				CheckInput(left_to_right);
-			}
 			cout << "Введите количество букв: ";
 			cin >> num_of_letters;
 			CheckInput(num_of_letters);
@@ -94,23 +90,16 @@ int main()
 				CheckInput(num_of_letters);
 			}
 			cout << "Введите количество стран: ";
-			cin >> size;
-			CheckInput(size);
-			while (size < 0)
+			cin >> num_of_countries;
+			CheckInput(num_of_countries);
+			while (num_of_countries < 0)
 			{
 				cout << "Некорректный ввод" << endl;
 				cout << "Повторите ввод: ";
-				cin >> size;
-				CheckInput(size);
+				cin >> num_of_countries;
+				CheckInput(num_of_countries);
 			}
-			delete[] countries;
-			countries = new string[size];
-			cout << "Введите страны: " << endl;
-			for (int i = 0; i < size; i++)
-			{
-				cin >> countries[i];
-			}
-			languages.push_back(Language(name, left_to_right, num_of_letters, countries, size));
+			languages.push_back(Language(name, left_to_right, num_of_letters, num_of_countries));
 			cout << "Язык записан" << endl;
 			break;
 
@@ -126,7 +115,7 @@ int main()
 			for (int i = 0; i < languages.size(); i++)
 			{
 				cout << i + 1 << "  " << setw(5) << setfill('-') << ' ' << endl;
-				cout << languages[i] << endl;
+				cout << languages[i];
 				cout << setw(10) << setfill('-') << ' ' << endl;
 			}
 			break;
@@ -217,24 +206,23 @@ int main()
 					CheckInput(num_of_letters);
 				}
 				for_each(languages.begin(), languages.end(), [num_of_letters](Language l)
-					{findMoreThan(l, num_of_letters); });
+					{findMoreThan(l, num_of_letters, 0); });
 				break;
 			case 3:
 				cout << "Введите пороговое количество стран: ";
-				cin >> size;
-				CheckInput(size);
-				while (size < 0)
+				cin >> num_of_countries;
+				CheckInput(num_of_countries);
+				while (num_of_countries < 0)
 				{
 					cout << "Некорректный ввод" << endl;
 					cout << "Повторите ввод: ";
-					cin >> size;
-					CheckInput(size);
+					cin >> num_of_countries;
+					CheckInput(num_of_countries);
 				}
-				for_each(languages.begin(), languages.end(), [size](Language l)
-					{findMoreThan(l, size); });
+				for_each(languages.begin(), languages.end(), [num_of_countries](Language l)
+					{findMoreThan(l, num_of_countries, 1); });
 				break;
 			}
-			cout << one;
 			break;
 
 		case 9:
@@ -269,21 +257,21 @@ int main()
 				break;
 			case 3:
 				cout << "Введите количество стран: ";
-				cin >> size;
-				CheckInput(size);
-				while (size < 0)
+				cin >> num_of_countries;
+				CheckInput(num_of_countries);
+				while (num_of_countries < 0)
 				{
 					cout << "Некорректный ввод" << endl;
 					cout << "Повторите ввод: ";
-					cin >> size;
-					CheckInput(size);
+					cin >> num_of_countries;
+					CheckInput(num_of_countries);
 				}
 				if (find_if(languages.begin(), languages.end(),
-					[size](Language l)
-					{ return l.get_num_of_countries() == size; }) != languages.end())
+					[num_of_countries](Language l)
+					{ return l.get_num_of_countries() == num_of_countries; }) != languages.end())
 					one = *find_if(languages.begin(), languages.end(),
-						[size](Language l)
-						{ return l.get_num_of_countries() == size; });
+						[num_of_countries](Language l)
+						{ return l.get_num_of_countries() == num_of_countries; });
 				break;
 			}
 			if (one.get_name() != "null")
@@ -291,12 +279,39 @@ int main()
 			break;
 
 		case 10:
+			out.open("file.txt");
+			if (out.is_open())
+			{
+				for (int i = 0; i < languages.size(); i++)
+				{
+					out << languages[i].get_name() << endl;
+					out << languages[i].get_left_to_right() << endl;
+					out << languages[i].get_num_of_letters() << endl;
+					out << languages[i].get_num_of_countries() << endl;
+				}
+			}
+			out.close();
+			cout << "Данные записаны" << endl;
 			break;
 
 		case 11:
+			in.open("file.txt");
+			if (in.is_open())
+			{
+				languages.clear();
+				while (in >> name >> left_to_right >> num_of_letters >> num_of_countries)
+				{
+					languages.push_back(Language(name, left_to_right, num_of_letters, num_of_countries));
+				}
+				cout << "Успешно" << endl;
+			}
+			in.close();
 			break;
 
 		case 12:
+			Tests();
+
+		case 13:
 			return 0;
 		
 		default:
@@ -350,16 +365,24 @@ bool lessInName(Language l1, Language l2)
 	return l1.get_name() < l2.get_name();
 }
 
-bool findMoreThan(Language l1, string name)
+void findMoreThan(Language l1, string name)
 {
 	if (l1.get_name() > name)
 		cout << l1 << endl;
 }
 
-bool findMoreThan(Language l1, int num)
+void findMoreThan(Language l1, int num, int t)
 {
-	if (l1.get_num_of_letters() > num)
-		cout << l1 << endl;
+	if (t == 0)
+	{
+		if (l1.get_num_of_letters() > num)
+			cout << l1 << endl;
+	}
+	else
+	{
+		if (l1.get_num_of_countries() > num)
+			cout << l1 << endl;
+	}
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
